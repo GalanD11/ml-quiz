@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mobile Legends Quiz - Lumayan Sulit</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Exo+2:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Exo 2', sans-serif;
+    background: #0a0e1a;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      radial-gradient(ellipse at 20% 20%, rgba(0, 80, 200, 0.15) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(200, 20, 20, 0.12) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(255, 200, 0, 0.05) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 680px;
+    padding: 20px;
+  }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  .start-card, .result-card, .lb-card, .done-card {
+    background: linear-gradient(135deg, #0d1528 0%, #111b35 50%, #150d20 100%);
+    border: 1px solid rgba(255,200,0,0.3);
+    border-radius: 20px;
+    padding: 50px 40px;
+    text-align: center;
+    box-shadow: 0 0 60px rgba(255,200,0,0.08), 0 0 120px rgba(0,80,200,0.1);
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .fade-in { animation: fadeIn 0.4s ease; }
+
+  .logo-ring { width: 120px; height: 120px; margin: 0 auto 24px; position: relative; }
+  .logo-ring svg { width: 100%; height: 100%; }
+  .logo-ring-sm { width: 70px; height: 70px; margin: 0 auto 16px; }
+  .logo-ring-sm svg { width: 100%; height: 100%; }
+
+  h1 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 2.8rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #ffc800, #ff6b00, #ff2020);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+
+  .subtitle {
+    font-size: 0.85rem;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    color: rgba(255,200,0,0.6);
+    margin-bottom: 32px;
+  }
+
+  .difficulty-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #c00, #8b0000);
+    color: #ffcccc;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    padding: 6px 20px;
+    border-radius: 30px;
+    border: 1px solid rgba(255,80,80,0.4);
+    margin-bottom: 40px;
+  }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 36px;
+  }
+
+  .stat-box {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 16px 8px;
+  }
+
+  .stat-num {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #ffc800;
+  }
+
+  .stat-label {
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    margin-top: 2px;
+  }
+
+  .name-section { margin-bottom: 20px; text-align: left; }
+
+  .name-label {
+    display: block;
+    font-size: 0.72rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(255,200,0,0.7);
+    margin-bottom: 10px;
+    text-align: center;
+  }
+
+  .name-input {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1.5px solid rgba(255,200,0,0.3);
+    border-radius: 12px;
+    padding: 15px 20px;
+    color: #fff;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-align: center;
+    outline: none;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+
+  .name-input::placeholder { color: rgba(255,255,255,0.2); font-weight: 400; letter-spacing: 0; }
+  .name-input:focus { border-color: rgba(255,200,0,0.7); background: rgba(255,200,0,0.06); box-shadow: 0 0 20px rgba(255,200,0,0.1); }
+
+  .btn-start, .btn-lb, .btn-home, .btn-reset {
+    display: block;
+    width: 100%;
+    padding: 18px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+
+  .btn-start { background: linear-gradient(135deg, #1a4fc8, #0e2d80); color: #fff; border: 1px solid rgba(100,150,255,0.4); }
+  .btn-lb    { background: linear-gradient(135deg, #8b6914, #5a4008); color: #ffd860; border: 1px solid rgba(255,200,0,0.3); font-size: 1.1rem; }
+  .btn-home  { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.12); font-size: 1rem; letter-spacing: 3px; }
+  .btn-reset { background: rgba(255,40,40,0.08); color: #ff7070; border: 1px solid rgba(255,60,60,0.25); font-size: 0.9rem; letter-spacing: 3px; padding: 12px; }
+
+  .btn-start:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(26,79,200,0.5); }
+  .btn-lb:hover    { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255,180,0,0.25); }
+  .btn-home:hover  { background: rgba(255,255,255,0.08); transform: translateY(-1px); }
+  .btn-reset:hover { background: rgba(255,40,40,0.15); transform: translateY(-1px); }
+  .btn-start:active, .btn-lb:active, .btn-home:active, .btn-reset:active { transform: scale(0.98); }
+
+  .btn-start:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* Loading spinner */
+  .loading-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10,14,26,0.85);
+    z-index: 999;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .loading-overlay.show { display: flex; }
+  .spinner {
+    width: 48px; height: 48px;
+    border: 4px solid rgba(255,200,0,0.2);
+    border-top-color: #ffc800;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-family: 'Rajdhani', sans-serif; font-size: 1rem; letter-spacing: 3px; color: rgba(255,200,0,0.7); text-transform: uppercase; }
+
+  /* Already played */
+  .lock-icon { font-size: 5rem; margin-bottom: 16px; }
+  .lock-title { font-family: 'Rajdhani', sans-serif; font-size: 1.8rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: #ff6060; margin-bottom: 12px; }
+  .lock-msg { font-size: 0.95rem; color: rgba(255,255,255,0.5); line-height: 1.7; margin-bottom: 24px; }
+  .lock-score-box { background: rgba(255,200,0,0.08); border: 1px solid rgba(255,200,0,0.25); border-radius: 14px; padding: 20px; margin-bottom: 28px; }
+  .lock-score-label { font-size: 0.7rem; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,200,0,0.55); margin-bottom: 6px; }
+  .lock-score-val { font-family: 'Rajdhani', sans-serif; font-size: 3.5rem; font-weight: 700; color: #ffc800; line-height: 1; }
+  .lock-score-sub { font-size: 0.8rem; color: rgba(255,255,255,0.35); margin-top: 4px; }
+
+  /* Quiz screen */
+  .player-name-display { font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,200,0,0.55); text-align: center; margin-bottom: 12px; }
+  .player-name-display strong { color: #ffc800; }
+
+  .quiz-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .q-counter { font-family: 'Rajdhani', sans-serif; font-size: 1rem; color: rgba(255,255,255,0.5); letter-spacing: 2px; }
+  .q-counter span { color: #ffc800; font-size: 1.3rem; }
+  .score-badge { font-family: 'Rajdhani', sans-serif; font-size: 1rem; color: rgba(255,255,255,0.5); letter-spacing: 2px; }
+  .score-badge span { color: #4af; font-size: 1.3rem; }
+
+  .timer-wrap { margin-bottom: 20px; position: relative; }
+  .timer-bar-bg { width: 100%; height: 8px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; }
+  .timer-bar { height: 100%; border-radius: 4px; transition: width 1s linear, background 0.5s; background: linear-gradient(90deg, #ffc800, #ff6b00); width: 100%; }
+  .timer-bar.danger { background: linear-gradient(90deg, #ff4444, #cc0000); }
+  .timer-text { position: absolute; right: 0; top: -22px; font-family: 'Rajdhani', sans-serif; font-size: 1.1rem; font-weight: 700; color: #ffc800; transition: color 0.3s; }
+  .timer-text.danger { color: #ff4444; }
+
+  .question-card { background: linear-gradient(135deg, #0d1528, #111b35); border: 1px solid rgba(100,150,255,0.2); border-radius: 16px; padding: 28px; margin-bottom: 16px; }
+
+  .q-role-tag { display: inline-block; font-size: 0.65rem; letter-spacing: 3px; text-transform: uppercase; padding: 4px 12px; border-radius: 20px; margin-bottom: 14px; font-weight: 600; }
+  .q-role-tag.hero     { background: rgba(255,100,0,0.15); color: #ff9040; border: 1px solid rgba(255,100,0,0.3); }
+  .q-role-tag.mechanic { background: rgba(0,150,255,0.15); color: #50b8ff; border: 1px solid rgba(0,150,255,0.3); }
+  .q-role-tag.lore     { background: rgba(200,50,200,0.15); color: #d070d0; border: 1px solid rgba(200,50,200,0.3); }
+  .q-role-tag.skill    { background: rgba(0,200,100,0.15); color: #40d880; border: 1px solid rgba(0,200,100,0.3); }
+
+  .question-text { font-size: 1.15rem; line-height: 1.6; color: #e8eaf6; font-weight: 600; }
+
+  .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .opt-btn { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 16px 14px; color: #ccd4e8; font-family: 'Exo 2', sans-serif; font-size: 0.9rem; font-weight: 600; cursor: pointer; text-align: left; transition: all 0.18s; position: relative; overflow: hidden; }
+  .opt-btn:hover:not(:disabled) { background: rgba(26,79,200,0.2); border-color: rgba(100,150,255,0.5); color: #fff; transform: translateY(-1px); }
+  .opt-btn:active:not(:disabled) { transform: scale(0.98); }
+  .opt-btn.correct { background: rgba(0,180,80,0.2); border-color: #00b850; color: #40ff90; }
+  .opt-btn.wrong   { background: rgba(220,30,30,0.2); border-color: #dc1e1e; color: #ff7070; }
+  .opt-btn.reveal  { background: rgba(0,180,80,0.1); border-color: rgba(0,180,80,0.4); color: #40ff90; }
+  .opt-btn:disabled { cursor: default; }
+
+  .opt-letter { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 6px; background: rgba(255,255,255,0.08); font-size: 0.7rem; margin-right: 8px; font-weight: 700; color: rgba(255,255,255,0.5); flex-shrink: 0; }
+  .opt-btn.correct .opt-letter { background: rgba(0,200,80,0.3); color: #40ff90; }
+  .opt-btn.wrong   .opt-letter { background: rgba(220,30,30,0.3); color: #ff7070; }
+  .opt-btn.reveal  .opt-letter { background: rgba(0,200,80,0.2); color: #40ff90; }
+
+  .explanation-box { background: rgba(255,200,0,0.06); border: 1px solid rgba(255,200,0,0.2); border-radius: 12px; padding: 14px 18px; margin-top: 14px; font-size: 0.85rem; color: rgba(255,220,100,0.9); line-height: 1.6; display: none; }
+  .explanation-box.show { display: block; }
+  .explanation-box strong { color: #ffc800; }
+
+  .progress-dots { display: flex; gap: 6px; justify-content: center; margin-top: 20px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.1); transition: all 0.3s; }
+  .dot.done-correct { background: #00b850; }
+  .dot.done-wrong   { background: #dc1e1e; }
+  .dot.active       { background: #ffc800; width: 20px; border-radius: 4px; }
+
+  /* Result */
+  .result-player-tag { font-size: 0.8rem; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,200,0,0.6); margin-bottom: 4px; }
+  .result-player-tag strong { color: #ffc800; }
+  .result-icon { font-size: 4rem; margin-bottom: 12px; }
+  .result-title { font-family: 'Rajdhani', sans-serif; font-size: 2rem; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 8px; }
+  .result-title.legend { background: linear-gradient(135deg, #ffc800, #ff6b00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .result-title.pro    { background: linear-gradient(135deg, #4af, #0af); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .result-title.tryhard { color: #a0a8c0; }
+
+  .result-score-big { font-family: 'Rajdhani', sans-serif; font-size: 5rem; font-weight: 700; color: #ffc800; line-height: 1; margin: 20px 0 4px; }
+  .result-score-label { font-size: 0.8rem; letter-spacing: 4px; text-transform: uppercase; color: rgba(255,255,255,0.35); margin-bottom: 30px; }
+
+  .result-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 32px; }
+  .r-stat { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px 8px; }
+  .r-stat-num { font-family: 'Rajdhani', sans-serif; font-size: 1.8rem; font-weight: 700; }
+  .r-stat-num.green { color: #40ff90; }
+  .r-stat-num.red   { color: #ff7070; }
+  .r-stat-num.blue  { color: #4af; }
+  .r-stat-label { font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.35); margin-top: 2px; }
+
+  .rank-display { background: rgba(255,200,0,0.08); border: 1px solid rgba(255,200,0,0.2); border-radius: 12px; padding: 16px; margin-bottom: 28px; font-size: 0.9rem; color: rgba(255,220,100,0.85); line-height: 1.5; }
+
+  /* Leaderboard */
+  .lb-section-title { font-family: 'Rajdhani', sans-serif; font-size: 1.1rem; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; color: #ffc800; text-align: center; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+
+  .section-divider { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,200,0,0.3), transparent); margin: 32px 0; }
+
+  .lb-table { width: 100%; border-collapse: collapse; margin-bottom: 28px; }
+  .lb-table th { font-size: 0.65rem; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,0.3); padding: 0 10px 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .lb-table th:first-child { width: 40px; text-align: center; }
+  .lb-table th:last-child  { text-align: right; }
+  .lb-table th.col-correct { text-align: center; }
+
+  .lb-table td { padding: 11px 10px; font-size: 0.88rem; color: rgba(255,255,255,0.7); border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
+  .lb-table td:first-child { text-align: center; }
+  .lb-table td:last-child  { text-align: right; }
+  .lb-table td.col-correct { text-align: center; }
+
+  .lb-row-highlight { background: rgba(255,200,0,0.08) !important; }
+  .lb-row-highlight td { color: #ffd860 !important; }
+  .lb-row:hover { background: rgba(255,255,255,0.03); }
+
+  .rank-medal { font-size: 1.15rem; }
+  .rank-num { font-family: 'Rajdhani', sans-serif; font-size: 1rem; font-weight: 700; color: rgba(255,255,255,0.3); }
+  .rank-num.gold   { color: #ffc800; }
+  .rank-num.silver { color: #b0c0d0; }
+  .rank-num.bronze { color: #cd7f32; }
+
+  .lb-player-name { font-weight: 700; color: rgba(255,255,255,0.9); }
+  .lb-you-badge { display: inline-block; background: rgba(255,100,0,0.2); color: #ff9040; font-size: 0.58rem; letter-spacing: 2px; font-weight: 700; padding: 2px 6px; border-radius: 5px; border: 1px solid rgba(255,100,0,0.35); margin-left: 6px; text-transform: uppercase; vertical-align: middle; }
+
+  .lb-score-val { font-family: 'Rajdhani', sans-serif; font-size: 1.15rem; font-weight: 700; color: #4aaff0; }
+  .lb-score-val.rank1 { color: #ffc800; }
+  .lb-score-val.rank2 { color: #b0c0d0; }
+  .lb-score-val.rank3 { color: #cd7f32; }
+
+  .lb-correct-val { font-size: 0.85rem; color: rgba(100,255,160,0.75); font-weight: 600; }
+  .lb-date { font-size: 0.7rem; color: rgba(255,255,255,0.2); }
+  .lb-empty { text-align: center; padding: 36px 20px; color: rgba(255,255,255,0.2); font-size: 0.9rem; }
+
+  .onetime-notice { display: flex; align-items: center; gap: 10px; background: rgba(255,100,0,0.08); border: 1px solid rgba(255,100,0,0.25); border-radius: 10px; padding: 12px 16px; margin-bottom: 28px; font-size: 0.8rem; color: rgba(255,160,80,0.9); text-align: left; line-height: 1.5; }
+  .onetime-notice .notice-icon { font-size: 1.4rem; flex-shrink: 0; }
+
+  @keyframes pulse-red { 0%,100% { box-shadow: 0 0 0 0 rgba(255,50,50,0.4); } 50% { box-shadow: 0 0 0 8px rgba(255,50,50,0); } }
+  .pulse-danger { animation: pulse-red 0.8s ease infinite; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+  .shake { animation: shake 0.3s ease; }
+
+  #result-screen .result-card { padding: 40px; }
+
+</style>
+</head>
+<body>
+
+<!-- Loading overlay -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">Memuat...</div>
+</div>
+
+<div class="container">
+
+  <!-- START SCREEN -->
+  <div class="screen active" id="start-screen">
+    <div class="start-card fade-in">
+      <div class="logo-ring">
+        <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="ring-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#ffc800"/>
+              <stop offset="50%" stop-color="#ff6b00"/>
+              <stop offset="100%" stop-color="#cc0000"/>
+            </linearGradient>
+          </defs>
+          <circle cx="60" cy="60" r="54" fill="none" stroke="url(#ring-grad)" stroke-width="4" stroke-dasharray="280 60" stroke-linecap="round"/>
+          <circle cx="60" cy="60" r="42" fill="rgba(26,79,200,0.15)" stroke="rgba(100,150,255,0.3)" stroke-width="1"/>
+          <polygon points="60,22 72,48 100,52 80,72 85,100 60,87 35,100 40,72 20,52 48,48" fill="none" stroke="#ffc800" stroke-width="2.5" stroke-linejoin="round"/>
+          <circle cx="60" cy="60" r="8" fill="#ffc800"/>
+        </svg>
+      </div>
+      <h1>Mobile Legends<br>Quiz</h1>
+      <div class="subtitle">Ultimate Challenge</div>
+      <div class="difficulty-badge">⚠ Lumayan Sulit</div>
+
+      <div class="onetime-notice">
+        <span class="notice-icon">🔒</span>
+        <span><strong>Perhatian:</strong> Kuis ini hanya bisa dikerjakan <strong>satu kali</strong> per perangkat. Pastikan kondisi kamu siap sebelum mulai!</span>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-box"><div class="stat-num">10</div><div class="stat-label">Soal</div></div>
+        <div class="stat-box"><div class="stat-num">8s</div><div class="stat-label">Per Soal</div></div>
+        <div class="stat-box"><div class="stat-num">100</div><div class="stat-label">Skor Max</div></div>
+      </div>
+
+      <div class="name-section">
+        <label class="name-label" for="player-name-input">✦ Masukkan No Dana/Gopay ✦</label>
+        <input
+          class="name-input"
+          id="player-name-input"
+          type="text"
+          maxlength="20"
+          placeholder="No kamu untuk pemberian giveaway..."
+          oninput="onNameInput()"
+          onkeydown="if(event.key==='Enter') tryStart()"
+        >
+      </div>
+
+      <button class="btn-start" id="btn-start" onclick="startQuiz()" disabled>▶ MULAI KUIS</button>
+      <button class="btn-lb" onclick="showLeaderboardScreen()">🏆 LIHAT LEADERBOARD</button>
+    </div>
+  </div>
+
+  <!-- ALREADY PLAYED SCREEN -->
+  <div class="screen" id="done-screen">
+    <div class="done-card fade-in">
+      <div class="lock-icon">🔐</div>
+      <div class="lock-title">Sudah Selesai!</div>
+      <p class="lock-msg">
+        Kamu sudah mengerjakan kuis ini pada perangkat ini.<br>
+        Kuis hanya bisa dikerjakan <strong style="color:#ffc800">satu kali</strong> untuk menjaga kejujuran semua peserta.
+      </p>
+      <div class="lock-score-box">
+        <div class="lock-score-label">Skor Kamu</div>
+        <div class="lock-score-val" id="done-score">—</div>
+        <div class="lock-score-sub" id="done-correct">— / 10 Benar</div>
+      </div>
+      <button class="btn-lb" onclick="showLeaderboardScreen()">🏆 LIHAT LEADERBOARD</button>
+    </div>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div class="screen" id="quiz-screen">
+    <div class="player-name-display">Pemain: <strong id="quiz-player-name"></strong></div>
+    <div class="quiz-header">
+      <div class="q-counter">SOAL <span id="q-num">1</span>/10</div>
+      <div class="score-badge">SKOR <span id="score-display">0</span></div>
+    </div>
+    <div class="timer-wrap">
+      <div class="timer-text" id="timer-text">8</div>
+      <div class="timer-bar-bg"><div class="timer-bar" id="timer-bar"></div></div>
+    </div>
+    <div class="question-card">
+      <div class="q-role-tag" id="q-tag">HERO</div>
+      <div class="question-text" id="question-text"></div>
+    </div>
+    <div class="options-grid" id="options-grid"></div>
+    <div class="explanation-box" id="explanation-box"></div>
+    <div class="progress-dots" id="progress-dots"></div>
+  </div>
+
+  <!-- RESULT SCREEN -->
+  <div class="screen" id="result-screen">
+    <div class="result-card fade-in">
+      <div class="result-player-tag" id="result-player-tag"></div>
+      <div class="result-icon" id="result-icon"></div>
+      <div class="result-title" id="result-title"></div>
+      <div class="result-score-big" id="result-score"></div>
+      <div class="result-score-label">TOTAL SKOR</div>
+      <div class="result-stats">
+        <div class="r-stat"><div class="r-stat-num green" id="r-correct">0</div><div class="r-stat-label">Benar</div></div>
+        <div class="r-stat"><div class="r-stat-num red"   id="r-wrong">0</div><div class="r-stat-label">Salah</div></div>
+        <div class="r-stat"><div class="r-stat-num blue"  id="r-time">0</div><div class="r-stat-label">Timeout</div></div>
+      </div>
+      <div class="rank-display" id="rank-display"></div>
+
+      <div class="onetime-notice" style="margin-bottom:0;">
+        <span class="notice-icon">🔒</span>
+        <span>Kuis telah <strong>dikunci</strong>. Kamu tidak bisa mengerjakan ulang. Skor ini adalah hasil final kamu!</span>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <div class="lb-section-title">🏆 PAPAN PERINGKAT</div>
+      <table class="lb-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Pemain</th>
+            <th class="col-correct">Benar</th>
+            <th>Skor</th>
+          </tr>
+        </thead>
+        <tbody id="result-lb-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD SCREEN -->
+  <div class="screen" id="lb-screen">
+    <div class="lb-card fade-in">
+      <div class="logo-ring-sm">
+        <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="ring-grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#ffc800"/>
+              <stop offset="100%" stop-color="#ff6b00"/>
+            </linearGradient>
+          </defs>
+          <circle cx="60" cy="60" r="54" fill="none" stroke="url(#ring-grad2)" stroke-width="4" stroke-dasharray="280 60" stroke-linecap="round"/>
+          <circle cx="60" cy="60" r="42" fill="rgba(26,79,200,0.12)" stroke="rgba(100,150,255,0.3)" stroke-width="1"/>
+          <polygon points="60,22 72,48 100,52 80,72 85,100 60,87 35,100 40,72 20,52 48,48" fill="none" stroke="#ffc800" stroke-width="2.5" stroke-linejoin="round"/>
+          <circle cx="60" cy="60" r="8" fill="#ffc800"/>
+        </svg>
+      </div>
+      <h1 style="font-size:2.2rem; margin-bottom:4px;">Papan Peringkat</h1>
+      <div class="subtitle" style="margin-bottom: 32px;">Hall of Champions</div>
+
+      <table class="lb-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Pemain</th>
+            <th class="col-correct">Benar</th>
+            <th>Skor</th>
+          </tr>
+        </thead>
+        <tbody id="main-lb-body"></tbody>
+      </table>
+
+      <button class="btn-home" onclick="goBack()">← KEMBALI</button>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, deleteDoc, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  /* ============================================================
+     FIREBASE CONFIG
+  ============================================================ */
+  const firebaseConfig = {
+    apiKey: "AIzaSyB-0WyPQ7gh0low4U7sIAlt1F39ErUSH_E",
+    authDomain: "kuis-23fc7.firebaseapp.com",
+    projectId: "kuis-23fc7",
+    storageBucket: "kuis-23fc7.firebasestorage.app",
+    messagingSenderId: "84219063542",
+    appId: "1:84219063542:web:296c7d1114d1cede00d0d7",
+    measurementId: "G-W3RX5W9LHD"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+
+  /* ============================================================
+     QUESTIONS
+  ============================================================ */
+  const questions = [
+    {
+      tag: "RANDOM", tagClass: "random",
+      q: "Tebak Makanan Favorit Mimin?",
+      opts: ["Pizza","Rendang","Tempe Orek","Sate"],
+      ans: 1,
+      exp: "betul yang menjawab rendang"
+    },
+    {
+      tag: "HERO", tagClass: "hero",
+      q: "Angela adalah robot yang diciptakan oleh siapa?",
+      opts: ["steve, penemu terbesar Eruditio","Dr. Baker, penemu terbesar Eruditio","Kimmy, insinyur muda Eruditio","Xborg, rekan sesama robot"],
+      ans: 1,
+      exp: "Lunox memiliki Ultimate 'Yin-Yang Overturn' yang memungkinkannya menukar posisi dengan musuh yang ditarget, salah satu Ultimate paling unik di Mobile Legends."
+    },
+    {
+      tag: "HERO", tagClass: "hero",
+      q: "Gelar kehormatan apa yang diberikan Kekaisaran Moniyan kepada Tigreal atas keberaniannya?",
+      opts: ["Warrior of Dawn","Champion of the Light","Guardian of Moniyan","Paladin of the Empire"],
+      ans: 0,
+      exp: " Kekaisaran Moniyan menganugerahi Tigreal gelar Warrior of Dawn sebagai pengakuan atas keberaniannya. Ia juga menjadi pilar Order of Knights yang namanya identik dengan keberanian dan ketangguhan."
+    },
+    {
+      tag: "HERO", tagClass: "hero",
+      q: "Siapa yang pada akhirnya mengendalikan Hanzo di dalam lore Mobile Legends?",
+      opts: ["Dark Lord dari Abyss","Iblis dari Forsaken Wastes","Demon Pneuma","Alice"],
+      ans: 2,
+      exp: " Akakage pertama menciptakan Demon Pneuma sebagai lawan latihan menggunakan seni rahasia. Namun ia menjadi sadar dan memakan penciptanya. Meski disegel, sebagian kesadarannya lolos dan akhirnya menguasai ninja berbakat bernama Hanzo."
+    },
+    {
+      tag: "LORE", tagClass: "lore",
+      q: "Apa hubungan antara Lancelot dan Guinevere dalam lore Mobile Legends?",
+      opts: ["Lancelot dan Guinevere adalah sepasang kekasih","kakak beradik dari keluarga Baroque","rival dari keluarga bangsawan berbeda","Lancelot adalah pelayan setia keluarga Guinevere"],
+      ans: 1,
+      exp: "mereka adalah kakak-adik dari keluarga Baroque. Lancelot sangat menyayangi adiknya Guinevere meski sering dibuat pusing oleh eksperimen sihirnya."
+    },
+    {
+      tag: "HERO", tagClass: "hero",
+      q: "Di mana Alucard belajar ilmu tempur setelah kehilangan orang tuanya?",
+      opts: ["Monastery of Light","Forsaken Wastes","Castle Gorge","Temple of Light"],
+      ans: 0,
+      exp: "Alucard diterima di Monastery of Light sebagai anak yatim prajurit dan belajar berbagai ilmu tempur di sana hingga usia 18 tahun."
+    },
+    {
+      tag: "HERO", tagClass: "hero",
+      q: "Apa julukan Zilong di Mobile Legends?",
+      opts: ["The Dragon Knight","The Son of Dragon","The Dragon Warrior","The Dragonborn"],
+      ans: 1,
+      exp: "Zilong dikenal sebagai Son of Dragon, seorang pejuang yang lahir membawa darah naga dan ditakdirkan untuk memberantas kejahatan di Land of Dawn."
+    },
+    {
+      tag: "HERO", tagClass: "hero",
+      q: "Dari keluarga bangsawan mana Lancelot berasal?",
+      opts: ["House Paxley","House Alvin","House Baroque","House Vance"],
+      ans: 2,
+      exp: "Lancelot adalah anggota keluarga bangsawan Baroque, keluarga yang terkenal dengan kemampuan anggar luar biasa dan kecantikan yang dianggap sebagai warisan genetik sempurna mereka."
+    },
+    {
+      tag: "HERO", tagClass: "hero",
+      q: "Dari keluarga mana Gusion berasal?",
+      opts: ["House ligt","House Paxley","House Vance","Moniyan"],
+      ans: 1,
+      exp: "Gusion adalah putra keempat dari keluarga bangsawan Paxley, keluarga dengan kedudukan sihir tertinggi di Land of Dawn. Ia dikenal sebagai anak nakal dan berandalan di keluarganya."
+    },
+    {
+      tag: "HERO", tagClass: "hero",
+      q: "Hero mana yang BUKAN termasuk dalam kelompok 'Abyss' atau 'Demonic' dalam lore Mobile Legends, meskipun penampilannya terlihat seperti entitas jahat?",
+      opts: ["Dyrroth","Thamuz","Vexana","Baxia"],
+      ans: 3,
+      exp: "Baxia adalah Turtle Guardian dari Land of Dawn yang berasal dari Eastern Warrior lore, bukan dari Abyss atau Demonic faction. Meskipun tampilannya menyeramkan, Baxia adalah guardian pelindung."
+    }
+  ];
+
+  /* ============================================================
+     LOCAL STORAGE KEYS (untuk lock per perangkat)
+  ============================================================ */
+  const LS_PLAYED_KEY = 'mlquiz_played_v2';
+
+  function getPlayedRecord() {
+    try { return JSON.parse(localStorage.getItem(LS_PLAYED_KEY)); } catch(e) { return null; }
+  }
+  function markPlayed(entryId, score, correct) {
+    localStorage.setItem(LS_PLAYED_KEY, JSON.stringify({ played: true, entryId, score, correct }));
+  }
+
+  /* ============================================================
+     FIREBASE LEADERBOARD
+  ============================================================ */
+  async function saveToFirebase(entry) {
+    try {
+      await setDoc(doc(db, 'leaderboard', entry.id), entry);
+    } catch(e) {
+      console.error('Firebase save error:', e);
+    }
+  }
+
+  async function getLeaderboardFromFirebase() {
+    try {
+      const q = query(collection(db, 'leaderboard'), orderBy('score', 'desc'), orderBy('correct', 'desc'), limit(20));
+      const snap = await getDocs(q);
+      return snap.docs.map(d => d.data());
+    } catch(e) {
+      console.error('Firebase fetch error:', e);
+      return [];
+    }
+  }
+
+  async function resetFirebaseLeaderboard() {
+    try {
+      const snap = await getDocs(collection(db, 'leaderboard'));
+      const deletes = snap.docs.map(d => deleteDoc(doc(db, 'leaderboard', d.id)));
+      await Promise.all(deletes);
+      return true;
+    } catch(e) {
+      console.error('Reset error:', e);
+      return false;
+    }
+  }
+
+  /* ============================================================
+     UI HELPERS
+  ============================================================ */
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  function showLoading(text = 'Memuat...') {
+    document.getElementById('loading-text').textContent = text;
+    document.getElementById('loading-overlay').classList.add('show');
+  }
+
+  function hideLoading() {
+    document.getElementById('loading-overlay').classList.remove('show');
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function buildLbRows(tbodyId, highlightId, data) {
+    const body = document.getElementById(tbodyId);
+    body.innerHTML = '';
+    if (!data || data.length === 0) {
+      body.innerHTML = '<tr><td colspan="4" class="lb-empty">Belum ada pemain yang tercatat.<br>Jadilah yang pertama! 🏅</td></tr>';
+      return;
+    }
+    const medals = ['🥇','🥈','🥉'];
+    data.forEach((entry, idx) => {
+      const rank = idx + 1;
+      const isMe = (entry.id === highlightId);
+      const tr   = document.createElement('tr');
+      tr.className = 'lb-row' + (isMe ? ' lb-row-highlight' : '');
+
+      let rankCell = rank <= 3
+        ? `<span class="rank-medal">${medals[rank-1]}</span>`
+        : `<span class="rank-num">${rank}</span>`;
+
+      let scoreClass = rank === 1 ? 'rank1' : rank === 2 ? 'rank2' : rank === 3 ? 'rank3' : '';
+
+      const d = new Date(entry.ts);
+      const dateStr = d.toLocaleDateString('id-ID', { day:'2-digit', month:'short' });
+
+      tr.innerHTML = `
+        <td>${rankCell}</td>
+        <td>
+          <span class="lb-player-name">${escHtml(entry.name)}</span>
+          ${isMe ? '<span class="lb-you-badge">KAMU</span>' : ''}
+          <br><span class="lb-date">${dateStr}</span>
+        </td>
+        <td class="col-correct"><span class="lb-correct-val">${entry.correct}/10</span></td>
+        <td><span class="lb-score-val ${scoreClass}">${entry.score}</span></td>
+      `;
+      body.appendChild(tr);
+    });
+  }
+
+  /* ============================================================
+     NAVIGATION
+  ============================================================ */
+  let prevScreen = 'start-screen';
+
+  window.goBack = function() {
+    showScreen(prevScreen);
+  };
+
+  window.showLeaderboardScreen = async function() {
+    const current = document.querySelector('.screen.active');
+    prevScreen = current ? current.id : 'start-screen';
+    showLoading('Memuat leaderboard...');
+    const data = await getLeaderboardFromFirebase();
+    hideLoading();
+    const rec = getPlayedRecord();
+    buildLbRows('main-lb-body', rec ? rec.entryId : null, data);
+    showScreen('lb-screen');
+  };
+
+  function showDoneScreen(rec) {
+    document.getElementById('done-score').textContent   = rec.score;
+    document.getElementById('done-correct').textContent = `${rec.correct} / 10 Benar`;
+    showScreen('done-screen');
+  }
+
+  /* ============================================================
+     NAME INPUT
+  ============================================================ */
+  window.onNameInput = function() {
+    const val = document.getElementById('player-name-input').value.trim();
+    document.getElementById('btn-start').disabled = (val === '');
+  };
+
+  window.tryStart = function() {
+    const val = document.getElementById('player-name-input').value.trim();
+    if (val !== '') startQuiz();
+  };
+
+  /* ============================================================
+     INIT
+  ============================================================ */
+  window.addEventListener('DOMContentLoaded', () => {
+    const rec = getPlayedRecord();
+    if (rec && rec.played) showDoneScreen(rec);
+  });
+
+  /* ============================================================
+     QUIZ STATE
+  ============================================================ */
+  let currentQ = 0, score = 0, correctCount = 0, wrongCount = 0, timeoutCount = 0;
+  let timerInterval = null, timeLeft = 8, answered = false;
+  let playerName = '', lastEntryId = null;
+
+  /* ============================================================
+     QUIZ LOGIC
+  ============================================================ */
+  window.startQuiz = function() {
+    const rec = getPlayedRecord();
+    if (rec && rec.played) { showDoneScreen(rec); return; }
+
+    playerName = document.getElementById('player-name-input').value.trim();
+    if (!playerName) return;
+
+    currentQ = 0; score = 0; correctCount = 0; wrongCount = 0; timeoutCount = 0; lastEntryId = null;
+    document.getElementById('quiz-player-name').textContent = playerName;
+    showScreen('quiz-screen');
+    buildDots();
+    loadQuestion();
+  };
+
+  function buildDots() {
+    const container = document.getElementById('progress-dots');
+    container.innerHTML = '';
+    for (let i = 0; i < 10; i++) {
+      const d = document.createElement('div');
+      d.className = 'dot' + (i === 0 ? ' active' : '');
+      d.id = 'dot-' + i;
+      container.appendChild(d);
+    }
+  }
+
+  function loadQuestion() {
+    answered = false;
+    const q = questions[currentQ];
+    document.getElementById('q-num').textContent         = currentQ + 1;
+    document.getElementById('score-display').textContent = score;
+    const tag = document.getElementById('q-tag');
+    tag.textContent = q.tag;
+    tag.className   = 'q-role-tag ' + q.tagClass;
+    document.getElementById('question-text').textContent = q.q;
+
+    const grid = document.getElementById('options-grid');
+    grid.innerHTML = '';
+    ['A','B','C','D'].forEach((letter, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'opt-btn';
+      btn.innerHTML = `<span class="opt-letter">${letter}</span>${q.opts[i]}`;
+      btn.onclick = () => selectAnswer(i);
+      grid.appendChild(btn);
+    });
+
+    const exp = document.getElementById('explanation-box');
+    exp.className = 'explanation-box';
+    exp.innerHTML = '';
+    updateDot(currentQ, 'active');
+    startTimer();
+  }
+
+  function startTimer() {
+    clearInterval(timerInterval);
+    timeLeft = 8;
+    updateTimerUI();
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      updateTimerUI();
+      if (timeLeft <= 0) { clearInterval(timerInterval); handleTimeout(); }
+    }, 1000);
+  }
+
+  function updateTimerUI() {
+    const bar  = document.getElementById('timer-bar');
+    const text = document.getElementById('timer-text');
+    bar.style.width = ((timeLeft / 8) * 100) + '%';
+    text.textContent = timeLeft;
+    const isDanger = timeLeft <= 3;
+    bar.classList.toggle('danger', isDanger);
+    text.classList.toggle('danger', isDanger);
+    bar.classList.toggle('pulse-danger', isDanger);
+  }
+
+  function handleTimeout() {
+    if (answered) return;
+    answered = true;
+    timeoutCount++;
+    const q    = questions[currentQ];
+    const btns = document.querySelectorAll('.opt-btn');
+    btns.forEach(b => b.disabled = true);
+    btns[q.ans].classList.add('reveal');
+    updateDot(currentQ, 'done-wrong');
+    showExplanation(q, false, true);
+    scheduleNext();
+  }
+
+  function selectAnswer(idx) {
+    if (answered) return;
+    answered = true;
+    clearInterval(timerInterval);
+    const q    = questions[currentQ];
+    const btns = document.querySelectorAll('.opt-btn');
+    btns.forEach(b => b.disabled = true);
+    const timeBonus = Math.ceil(timeLeft / 8 * 5);
+    if (idx === q.ans) {
+      btns[idx].classList.add('correct');
+      const pts = 10 + timeBonus;
+      score += pts;
+      correctCount++;
+      updateDot(currentQ, 'done-correct');
+      showExplanation(q, true, false, pts);
+    } else {
+      btns[idx].classList.add('wrong');
+      btns[q.ans].classList.add('reveal');
+      wrongCount++;
+      updateDot(currentQ, 'done-wrong');
+      document.getElementById('question-text').classList.add('shake');
+      setTimeout(() => document.getElementById('question-text').classList.remove('shake'), 400);
+      showExplanation(q, false, false);
+    }
+    document.getElementById('score-display').textContent = score;
+    scheduleNext();
+  }
+
+  function showExplanation(q, correct, timeout, pts) {
+    const box = document.getElementById('explanation-box');
+    let prefix = timeout ? '⏰ <strong>Waktu Habis!</strong> ' : correct ? `✅ <strong>Benar! +${pts} poin.</strong> ` : '❌ <strong>Salah!</strong> ';
+    box.innerHTML = prefix + q.exp;
+    box.className = 'explanation-box show';
+  }
+
+  function updateDot(idx, status) {
+    const d = document.getElementById('dot-' + idx);
+    if (d) d.className = 'dot ' + status;
+  }
+
+  function scheduleNext() {
+    setTimeout(() => {
+      currentQ++;
+      if (currentQ >= 10) showResult();
+      else { updateDot(currentQ, 'active'); loadQuestion(); }
+    }, 2200);
+  }
+
+  /* ============================================================
+     RESULT + SAVE TO FIREBASE
+  ============================================================ */
+  async function showResult() {
+    showLoading('Menyimpan skor...');
+    const entry = {
+      id:      Date.now() + '_' + Math.random().toString(36).slice(2),
+      name:    playerName,
+      score:   score,
+      correct: correctCount,
+      ts:      Date.now()
+    };
+    lastEntryId = entry.id;
+    await saveToFirebase(entry);
+    markPlayed(entry.id, score, correctCount);
+
+    const lbData = await getLeaderboardFromFirebase();
+    hideLoading();
+
+    showScreen('result-screen');
+    document.getElementById('result-player-tag').innerHTML = `Hasil untuk: <strong>${escHtml(playerName)}</strong>`;
+    document.getElementById('r-correct').textContent = correctCount;
+    document.getElementById('r-wrong').textContent   = wrongCount;
+    document.getElementById('r-time').textContent    = timeoutCount;
+    document.getElementById('result-score').textContent = score;
+
+    let icon, title, titleClass, rank;
+    if (score >= 130) {
+      icon = '👑'; title = 'MYTHICAL GLORY'; titleClass = 'legend';
+      rank = '🏆 Luar biasa! Kamu adalah Dewa Mobile Legends sejati. Pengetahuanmu tentang ML tidak tertandingi!';
+    } else if (score >= 90) {
+      icon = '⚔️'; title = 'PRO PLAYER'; titleClass = 'pro';
+      rank = '💎 Impressive! Kamu memiliki pengetahuan ML yang sangat solid. Sedikit lagi bisa menyentuh puncak!';
+    } else if (score >= 50) {
+      icon = '🎮'; title = 'EPIC RANK'; titleClass = 'pro';
+      rank = '💪 Lumayan! Kamu tahu banyak hal tentang ML, tapi masih ada celah pengetahuan yang perlu diperdalam.';
+    } else {
+      icon = '🥉'; title = 'MASIH PEMULA'; titleClass = 'tryhard';
+      rank = '📚 Jangan menyerah! Kuis ini dirancang untuk menguji pengetahuan paling dalam. Terus belajar!';
+    }
+
+    document.getElementById('result-icon').textContent  = icon;
+    document.getElementById('result-title').textContent = title;
+    document.getElementById('result-title').className   = 'result-title ' + titleClass;
+    document.getElementById('rank-display').textContent = rank;
+
+    buildLbRows('result-lb-body', lastEntryId, lbData);
+  }
+</script>
+</body>
+</html>
