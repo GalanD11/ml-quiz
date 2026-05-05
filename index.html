@@ -469,6 +469,7 @@
             <th>#</th>
             <th>Pemain</th>
             <th class="col-correct">Benar</th>
+            <th class="col-correct">Durasi</th>
             <th>Skor</th>
           </tr>
         </thead>
@@ -638,7 +639,7 @@
 
   async function getLeaderboardFromFirebase() {
     try {
-      const q = query(collection(db, 'leaderboard'), orderBy('score', 'desc'), orderBy('correct', 'desc'), limit(20));
+      const q = query(collection(db, 'leaderboard'), orderBy('score', 'desc'), orderBy('correct', 'desc'), orderBy('duration', 'asc'), limit(20));
       const snap = await getDocs(q);
       return snap.docs.map(d => d.data());
     } catch(e) {
@@ -711,6 +712,7 @@
           <br><span class="lb-date">${dateStr}</span>
         </td>
         <td class="col-correct"><span class="lb-correct-val">${entry.correct}/10</span></td>
+        <td class="col-correct"><span class="lb-correct-val" style="color:rgba(180,180,255,0.75)">${entry.duration ?? '-'}s</span></td>
         <td><span class="lb-score-val ${scoreClass}">${entry.score}</span></td>
       `;
       body.appendChild(tr);
@@ -770,6 +772,7 @@
   let currentQ = 0, score = 0, correctCount = 0, wrongCount = 0, timeoutCount = 0;
   let timerInterval = null, timeLeft = 8, answered = false;
   let playerName = '', lastEntryId = null;
+  let quizStartTime = null;
 
   /* ============================================================
      QUIZ LOGIC
@@ -784,6 +787,7 @@
     currentQ = 0; score = 0; correctCount = 0; wrongCount = 0; timeoutCount = 0; lastEntryId = null;
     document.getElementById('quiz-player-name').textContent = playerName;
     showScreen('quiz-screen');
+    quizStartTime = Date.now();
     buildDots();
     loadQuestion();
   };
@@ -914,6 +918,7 @@
   ============================================================ */
   async function showResult() {
     showLoading('Menyimpan skor...');
+    const duration = Math.round((Date.now() - quizStartTime) / 1000);
     const entry = {
       id:      Date.now() + '_' + Math.random().toString(36).slice(2),
       name:    playerName,
